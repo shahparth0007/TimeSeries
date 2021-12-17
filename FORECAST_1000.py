@@ -23,8 +23,8 @@ def forecast(category,level="ID",frequency="M",n=1,salesFromPath=True,
              flagsFromPath=True,transformation="",confidencelevel=0.95):
 
     ############################# DATA EXTRACTION #############################
-    sales, flags = FORECAST_1001.dataExtraction(category, level,salesFromPath,
-                                                flagsFromPath)
+        sales, flags = FORECAST_1001.dataExtraction(category, level,salesFromPath,
+                                                    flagsFromPath)
     unique=set(sales["ID"])
     algotable = pd.DataFrame()
     forecast = pd.Series()

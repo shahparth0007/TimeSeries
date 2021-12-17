@@ -9,33 +9,12 @@ from sklearn.preprocessing import MinMaxScaler
 
 
 #Dictionary to store the product wise min date to be considered for subsetting data for preprocessing
-DICT_START_DATE= { "J" : pd.to_datetime("01/04/2015"),
-                   "E" : pd.to_datetime("01/04/2015"),
-                   "W" : pd.to_datetime("01/04/2015")
-                   }
+DICT_START_DATE= { "J" : pd.to_datetime("01/04/2015")}
 
 """
 #This function will subset the dataframe based on the min date criteria for that product (J/E/W)
 Takes a data frame and a product category i.e "J"/"E"/"W" as input and subsets the data
 """
-def subsetDataframe(df , category):
-    try:
-        #Subsetting the dataframe to get before the category's start date data
-        subsetDF = df[df.index <= DICT_START_DATE[category]]
-        
-        #Getting the list of unique SKUs/Stores/CAT/CATPB for the above df
-        idListInSubsetDF = subsetDF["ID"].unique()
-        
-        #Setting the flag only for those rows whose data was present in the subsetted dataframe
-        boolCond = [ df.loc[i,"ID"] in idListInSubsetDF for i in range(df.shape[0])]
-        
-        return df[boolCond]
-        
-    except:
-        print("subsetDataframe__An error occurred while subsetting the data.")
-    return df
-
-
 #DIFFERENCING
 # create a differenced series
 def difference(dataset, interval=1,inverse=False,initial_value=0):
@@ -281,3 +260,4 @@ def stationarize(data,conflev=0.95):
 # transformation and variable 3rd element- parameters required for inversing 
 transformation
 """
+

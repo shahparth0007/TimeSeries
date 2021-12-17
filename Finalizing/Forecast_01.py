@@ -1,82 +1,13 @@
-
-
 #Importing the relevant modules
-import pyodbc
 import pandas as pd
-import pandas.io.sql
 import config
+import numpy as np  
+import itertools
 
-#Class containing the list of all queries
-class dbQueries:
-
-    dictSelectEyewareData = { "OVR" : "",
-                              "REG" : "",
-                              "STO" : "",
-                              "SKU" : "",
-                              "CAT" : "" }
-
-    dictSelectWatchData =   { "OVR" : "",
-                              "REG" : "",
-                              "STO" : "",
-                              "SKU" : "",
-                              "CAT" : "" }
-
-    dictSelectJewelData =   { "OVR" : "",
-                              "REG" : "",
-                              "STO" : "",
-                              "CAT" : "",
-                              "CAP" : "" }
-
-    strSelectTestQuery = ""
-
-    strSelectTestParametricQuery = ""
-
-#Function to return the connection string depending on the input passed.
-#Note that the function has optional parameters and works even if no argument is passed
-def connString(connType = 1):
-
-    try:
-
-        #Connection String for connecting to CARTESIAN_CON on Netezza
-        if connType == 1:
-            connStr = config.CONSTR
-        #For future use when data is to be fetched from an additional DB server
-        else:
-            connStr =""
-
-        return connStr
-
-    except:
-
-        print("connString__Unable to return a connection string.")
-
-    
-#Function to select data from the DB using the query passed in the function
-#This function returns a dataframe with the selected data
-def selectData(strQuery , paramLst):
-
-    try:
-
-        #Getting the conn string by calling the function
-        connStr = connString()
-        conn = pyodbc.connect(connStr)
-
-        #Storing the results of the cursor in a dataframe
-        if len(paramLst) == 0:
-            df= pandas.io.sql.read_sql(strQuery, conn)
-        else:
-            df= pandas.io.sql.read_sql(strQuery, conn, params = paramLst)          
-        
-        #Closing the connection
-        conn.close()
-
-        #Returning the dataframe containing the queried data
-        return df
-    except:
-
-        #In case of exception do the following
-        print("selectData__Could not fetch data from the database due to an exception.")
-
+#*********Function List*********#
+#1)selectFileFromPath : Loads file 
+#2)sanitizeDates : Uniform dates
+#3)dataExtraction : 
 
 #This function will be used to select a csv/excel file from the path which is passed to it
 def selectFileFromPath(strPath):
@@ -110,32 +41,14 @@ def dataExtraction(category , level , salesFromPath = True , flagsFromPath = Tru
     try:
 
         if salesFromPath == True and flagsFromPath == True:
+            print("Started")
             salesDF , flagsDF = extractdata(config.DICT_JEW_PATH[category] , config.DICT_FLAG_PATH[category] , level)
-        elif salesFromPath == False:
-            if category == "E":
-                salesDF = selectData(dictSelectEyewareData[level])
-            elif category == "W":
-                salesDF = selectData(dictSelectWatchData[level])
-            elif category == "J":
-                salesDF = selectData(dictSelectJewelData[level])
-
             dictColNames = {"OVR" : "Overall" , "REG" : "Regional" , "STO" : "Store" , "SKU" : "SKU" , "CAT" : "Category" , "CAP" : "CAT PB" }                          
-
-            salesDF , flagsDF = extractdata("" , config.DICT_FLAG_PATH[category] , dictColNames[level] , salesDF)
-        
-        return salesDF , flagsDF
+            return salesDF , flagsDF
     except:
         print("dataExtraction__An error occurred while extracting and merging the 2 dataframes.")
         raise
 
-
-
-"""
-############################################ CODED BY HARDIK ############################################
-"""
-
-import numpy as np  
-import itertools
 
 def expandgrid(*itrs):
     product = list(itertools.product(*itrs))
@@ -143,10 +56,12 @@ def expandgrid(*itrs):
 
 #level parameter must be case sensitive to the column name in the csv/excel file 
 def extractdata(salesdata_filepath,flags_filepath,level='ID' , salesDF = None,freq="D"):
+    print("Extraction_started")
     level=str(level)
     #importing flags and sales data 
     #flags=pd.read_csv(str(flags_filepath))
     flags = selectFileFromPath(str(flags_filepath))
+    print("Flags data shape:", flags.shape)
     
     if not salesdata_filepath == "":
         #salesdata = pd.read_csv(str(salesdata_filepath))
@@ -154,14 +69,16 @@ def extractdata(salesdata_filepath,flags_filepath,level='ID' , salesDF = None,fr
     else:
         salesdata = salesDF
     
-
+    print("Sales data shape:", salesdata.shape)
     #Converting DATE in string format to datetime format 
     flags['DATE'] = pd.to_datetime(flags['DATE'],format='%d-%m-%Y')
     salesdata['DATE'] = pd.to_datetime(salesdata['DATE'],format='%d-%m-%Y')
 
     #Extracting min and max DATE from dataset and creating index with all dates in between 
     mindate=salesdata['DATE'].min()
+    print("Min_data",mindate)
     maxdate=salesdata['DATE'].max()
+    print("Max_data",maxdate)
     date_rng = pd.date_range(start=mindate, end=maxdate, freq=freq)
 
     #Extracting all unique regions/stores/cat/PB
@@ -191,3 +108,4 @@ def extractdata(salesdata_filepath,flags_filepath,level='ID' , salesDF = None,fr
     return sales, flags
 
 #extractdata("Top_5_SKU.xls","All Flags.csv","SKU")
+

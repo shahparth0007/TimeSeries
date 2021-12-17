@@ -9,6 +9,12 @@ import math
 import config
 warnings.filterwarnings("ignore")
 
+#Defining MAPE metric 
+def MAPE(y_true, y_pred): 
+    y_true, y_pred = np.array(y_true), np.array(y_pred)
+    return np.mean(np.abs((y_true.sum() - y_pred.sum()) / y_true.sum())) * 100
+
+
 #Peform the train and test split for timeseries data
 #Category should be passed as "J" : Jewelery , "E" : Eyeware , "W" : Watches
 # def train_test_split(df, split = 0.7):
@@ -78,7 +84,7 @@ def HOLTWINTER(train, test ,category , data_freq = "D" , only_error = True, algo
             pred = ExponentialSmoothPredictions(train,test, m ,dictHoltParams["seasonal"][i] , dictHoltParams["damp"][i] )
             
             #Appending the MSE for the current algorithm to the list
-            mseLst.append(mean_squared_error(test,pred))
+            mseLst.append(MAPE(test,pred))
             #print(np.sqrt(mseLst))
             
         except:
@@ -107,3 +113,4 @@ def HOLTWINTER(train, test ,category , data_freq = "D" , only_error = True, algo
     #print(algo)
     
     return min(mseLst) , algo
+
